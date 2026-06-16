@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>预匹配规则配置弹窗 Demo</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #fff;
+      --line: #d9dee7;
+      --text: #1f2937;
+      --muted: #667085;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --red: #b42318;
+      --red-soft: #fff1f2;
+      --green: #15803d;
+      --green-soft: #f0fdf4;
+      --amber: #a16207;
+      --amber-soft: #fffbeb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 52px;
+      background: #1f2937;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 22px;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 14px;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .nav span.active {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .page {
+      padding: 18px;
+      max-width: 1420px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .toolbar {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filters input, .filters select {
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0 8px;
+      min-width: 118px;
+      background: #fff;
+    }
+
+    .btn {
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0 12px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .btn.danger {
+      color: var(--red);
+      border-color: #fecaca;
+      background: #fff;
+    }
+
+    .btn.icon {
+      width: 30px;
+      padding: 0;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .list-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .muted { color: var(--muted); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      margin: 1px 2px;
+    }
+
+    .pill.blue { color: var(--blue); background: var(--blue-soft); border-color: #bfdbfe; }
+    .pill.red { color: var(--red); background: var(--red-soft); border-color: #fecaca; }
+    .pill.green { color: var(--green); background: var(--green-soft); border-color: #bbf7d0; }
+    .pill.amber { color: var(--amber); background: var(--amber-soft); border-color: #fde68a; }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: min(1180px, 96vw);
+      height: min(760px, 92vh);
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, .28);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      height: 48px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+      overflow-x: auto;
+    }
+
+    .tab {
+      height: 42px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      padding: 0 16px;
+      background: transparent;
+      cursor: pointer;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--blue);
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--blue);
+    }
+
+    .modal-body {
+      padding: 14px 16px;
+      overflow: auto;
+    }
+
+    .rule-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .rule-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .rule-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .field input, .field select, .field textarea {
+      width: 100%;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0 8px;
+      background: #fff;
+    }
+
+    .field textarea {
+      height: 58px;
+      padding-top: 7px;
+      resize: none;
+    }
+
+    .field.wide { grid-column: span 2; }
+    .field.full { grid-column: 1 / -1; }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: auto;
+    }
+
+    .table-wrap table {
+      min-width: 980px;
+    }
+
+    .select-like {
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 3px 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .scenario {
+      border: 1px solid #bfdbfe;
+      background: #f8fbff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .scenario strong {
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      background: #111827;
+      color: #fff;
+      border-radius: 6px;
+      padding: 10px 14px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: .18s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .field.wide { grid-column: span 2; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+      .field.wide { grid-column: span 1; }
+      .modal { height: 94vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">仓储系统</div>
+      <div class="nav">
+        <span>首页</span>
+        <span class="active">新调拨管理</span>
+        <span>调拨单</span>
+      </div>
+    </div>
+
+    <main class="page">
+      <div class="toolbar">
+        <div class="filters">
+          <input value="ACUS260615001" aria-label="调拨单号">
+          <select aria-label="业务类型"><option>全部业务类型</option><option>FBA半精品</option><option>海外仓</option></select>
+          <select aria-label="国家"><option>全部国家</option><option>日本</option><option>美国</option><option>英国</option></select>
+          <button class="btn">查询</button>
+          <button class="btn">重置</button>
+        </div>
+        <div class="filters">
+          <button class="btn primary" id="openRuleBtn">货代预匹配 ▾</button>
+          <button class="btn">导出</button>
+        </div>
+      </div>
+
+      <div class="list-panel">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox"></th>
+              <th>调拨单号</th>
+              <th>业务类型</th>
+              <th>国家</th>
+              <th>运输方式</th>
+              <th>平台分仓</th>
+              <th>预分货代</th>
+              <th>货箱数</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" checked></td>
+              <td>ACJP260615001</td>
+              <td>FBA半精品</td>
+              <td>日本</td>
+              <td>空运</td>
+              <td class="muted">空</td>
+              <td><span class="pill blue">待预匹配</span></td>
+              <td>24</td>
+              <td>待过机</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>ACUK260615006</td>
+              <td>海外仓</td>
+              <td>英国</td>
+              <td>海运</td>
+              <td class="muted">空</td>
+              <td><span class="pill blue">待预匹配</span></td>
+              <td>18</td>
+              <td>待过机</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>ACUS260615018</td>
+              <td>FBA半精品</td>
+              <td>美国</td>
+              <td>空运</td>
+              <td class="muted">空</td>
+              <td><span class="pill blue">待预匹配</span></td>
+              <td>31</td>
+              <td>待过机</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="modalMask">
+    <section class="modal" role="dialog" aria-modal="true" aria-label="预匹配规则">
+      <div class="modal-header">
+        <div class="modal-title">预匹配规则</div>
+        <button class="btn icon" id="closeBtn" title="关闭">×</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="limit">货代/渠道限制</button>
+        <button class="tab" data-tab="service">服务属性规则</button>
+        <button class="tab" data-tab="warehouse">国家缺省平台分仓</button>
+        <button class="tab" data-tab="ratio">货代占比规则</button>
+      </div>
+
+      <div class="modal-body" id="modalBody"></div>
+
+      <div class="modal-footer">
+        <div class="hint">保存后用于过机自动预匹配和手工预匹配；配置只影响预匹配计算，不回写业务单据字段。</div>
+        <div>
+          <button class="btn" id="cancelBtn">取消</button>
+          <button class="btn primary" id="saveBtn">保存</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">已保存预匹配规则配置</div>
+
+  <script>
+    const tabContent = {
+      limit: `
+        <div class="scenario">
+          <strong>兼容场景</strong>
+          <div>海外仓，国家=英国/德国/法国，不能走业务维护的卡派渠道。这里不再按渠道名称判断，由业务直接多选具体禁用渠道。</div>
+        </div>
+        <div class="rule-head">
+          <div>
+            <div class="rule-title">货代/渠道限制</div>
+            <div class="rule-desc">按“场景限制条件 + 限制动作”维护。限制货代、限制渠道至少填一个：只填货代表示限制整个货代；只填渠道表示限制具体渠道；两个都填时表示该货代下这些渠道。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>业务类型</th>
+                <th>国家</th>
+                <th>运输方式</th>
+                <th>限制类型</th>
+                <th>限制货代</th>
+                <th>限制渠道</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><select><option>海外仓</option><option>FBA半精品</option></select></td>
+                <td><div class="select-like"><span class="pill red">英国</span><span class="pill red">德国</span><span class="pill red">法国</span></div></td>
+                <td><div class="select-like"><span class="muted">不限</span></div></td>
+                <td><select><option>不能走</option><option>只能走</option></select></td>
+                <td><div class="select-like"><span class="muted">不限</span></div></td>
+                <td><div class="select-like"><span class="pill red">英国卡派A</span><span class="pill red">德国卡派A</span><span class="pill red">法国卡派A</span></div></td>
+                <td><input value="海外仓英德法禁用卡派渠道"></td>
+                <td><button class="btn danger">删除</button><button class="btn icon" data-action="add-row" title="新增一行">+</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `,
+      service: `
+        <div class="scenario">
+          <strong>兼容场景</strong>
+          <div>日本 FBA半精品匹配“是否含税=否”的服务方式；美国空运按是否带电匹配直发/转飞路由。是否带电取调拨单明细产品物流敏感属性，存在内置电池、配套电池、纯电池任一种即为带电。</div>
+        </div>
+        <div class="rule-head">
+          <div>
+            <div class="rule-title">服务属性规则</div>
+            <div class="rule-desc">这里不限制货代，只限制服务方式/渠道自身属性，例如是否含税、路由类型。业务类型、国家必填；是否含税和路由类型至少填一个；若是否带电选择是/否，运输方式必填。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>业务类型</th>
+                <th>国家</th>
+                <th>运输方式</th>
+                <th>是否带电</th>
+                <th>是否含税</th>
+                <th>路由类型</th>
+                <th>可选渠道</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option></select></td>
+                <td><div class="select-like"><span class="pill blue">日本</span></div></td>
+                <td><div class="select-like"><span class="muted">不限</span></div></td>
+                <td><select><option>不限</option><option>是</option><option>否</option></select></td>
+                <td><select><option>否</option><option>是</option><option>不限</option></select></td>
+                <td><select><option>不限</option><option>直发</option><option>转飞</option></select></td>
+                <td><div class="select-like"><span class="muted">不指定，按属性过滤</span></div></td>
+                <td><input value="日本半精品使用不含税服务方式"></td>
+                <td><button class="btn danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option></select></td>
+                <td><div class="select-like"><span class="pill blue">美国</span></div></td>
+                <td><div class="select-like"><span class="pill blue">空运</span></div></td>
+                <td><select><option>是</option><option>否</option><option>不限</option></select></td>
+                <td><select><option>不限</option><option>是</option><option>否</option></select></td>
+                <td><select><option>转飞</option><option>直发</option><option>不限</option></select></td>
+                <td><div class="select-like"><span class="muted">不指定，按转飞路由过滤</span></div></td>
+                <td><input value="美国空运带电走转飞"></td>
+                <td><button class="btn danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option></select></td>
+                <td><div class="select-like"><span class="pill blue">美国</span></div></td>
+                <td><div class="select-like"><span class="pill blue">空运</span></div></td>
+                <td><select><option>否</option><option>是</option><option>不限</option></select></td>
+                <td><select><option>不限</option><option>是</option><option>否</option></select></td>
+                <td><select><option>直发</option><option>转飞</option><option>不限</option></select></td>
+                <td><div class="select-like"><span class="muted">不指定，按直发路由过滤</span></div></td>
+                <td><input value="美国空运不带电走直发"></td>
+                <td><button class="btn icon" data-action="add-row" title="新增一行">+</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `,
+      warehouse: `
+        <div class="scenario">
+          <strong>兼容场景</strong>
+          <div>现有国家缺省平台分仓主要给 FBA半精品使用，所以新增“业务类型”条件。海外仓未配置时不会误用半精品分仓。</div>
+        </div>
+        <div class="rule-head">
+          <div>
+            <div class="rule-title">国家缺省平台分仓</div>
+            <div class="rule-desc">仅当调拨单平台分仓为空时使用；只参与预匹配计算，不回写调拨单平台分仓。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>业务类型</th>
+                <th>国家</th>
+                <th>平台分仓</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option></select></td>
+                <td><select><option>澳大利亚</option><option>加拿大</option><option>美国</option></select></td>
+                <td><select><option>BWU2</option><option>YYZ7</option><option>SYD1</option></select></td>
+                <td><input value="原国家缺省配置迁移，限定 FBA半精品"></td>
+                <td><button class="btn danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option></select></td>
+                <td><select><option>加拿大</option><option>澳大利亚</option><option>美国</option></select></td>
+                <td><select><option>YYZ7</option><option>BWU2</option></select></td>
+                <td><input value="原国家缺省配置迁移，限定 FBA半精品"></td>
+                <td><button class="btn icon" data-action="add-row" title="新增一行">+</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `,
+      ratio: `
+        <div class="scenario">
+          <strong>兼容场景</strong>
+          <div>V1 采用“当天首次过机锁定配额池”。第一次收到过机事件时，系统按规则组圈定当天参与统计的调拨单并锁定总量；统计范围必须包含当前过机箱子关联的调拨单。后续多次过机仍使用第一次锁定的配额池，不扩大总量。</div>
+        </div>
+        <div class="rule-head">
+          <div>
+            <div class="rule-title">货代占比规则</div>
+            <div class="rule-desc">一行就是一条货代最大占比限制。同一组“业务类型 + 国家 + 运输方式”下可只维护需要限制的货代，例如只限制 A 货代最多 50%，其他货代不配置则不受占比限制。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>业务类型</th>
+                <th>国家</th>
+                <th>运输方式</th>
+                <th>货代</th>
+                <th>最大占比</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option><option>不限</option></select></td>
+                <td><select><option>美国</option><option>日本</option><option>英国</option></select></td>
+                <td><select><option>空运</option><option>海运</option><option>铁路</option></select></td>
+                <td><select><option>华东航线</option><option>南方快航</option></select></td>
+                <td><input value="50%"></td>
+                <td><input value="新启天欧洲当天最多占用 50%，其余货代不限制"></td>
+                <td><button class="btn danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><select><option>FBA半精品</option><option>海外仓</option><option>不限</option></select></td>
+                <td><select><option>美国</option><option>日本</option><option>英国</option></select></td>
+                <td><select><option>空运</option><option>海运</option><option>铁路</option></select></td>
+                <td><select><option>南方快航</option><option>华东航线</option></select></td>
+                <td><input value="30%"></td>
+                <td><input value="可选配置；不需要限制则删除本行"></td>
+                <td><button class="btn icon" data-action="add-row" title="新增一行">+</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scenario" style="margin-top:12px;">
+          <strong>匹配口径</strong>
+          <div>当前货代已占用重量 &lt; 最大可分配重量时，本单允许匹配该货代；即使匹配后略超也不拆单。若已占用重量 ≥ 最大可分配重量，后续单据跳过该货代，继续匹配次优渠道。未配置占比的货代不受该限制。</div>
+        </div>
+        <div class="rule-head" style="margin-top:12px;">
+          <div>
+            <div class="rule-title">当天配额池统计条件</div>
+            <div class="rule-desc">系统生成配额池时使用，以下条件为且关系。配置人员不用维护这些条件，仅用于说明占比总量从哪些单据统计。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>条件项</th>
+                <th>取值/判断</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>业务类型</td>
+                <td><span class="pill blue">FBA半精品</span><span class="pill blue">海外仓</span></td>
+                <td>仅允许这两个业务类型；同时还要命中当前占比规则组</td>
+              </tr>
+              <tr>
+                <td>装箱状态</td>
+                <td><span class="pill green">已装箱</span></td>
+                <td>只统计已经完成装箱的调拨单</td>
+              </tr>
+              <tr>
+                <td>箱子过机时间</td>
+                <td>存在箱子未过机时间</td>
+                <td>若单据下箱子都已有过机时间，则不再进入首次配额池统计</td>
+              </tr>
+              <tr>
+                <td>预匹配货代</td>
+                <td>为空</td>
+                <td>已经预匹配过的单据不再参与总量统计</td>
+              </tr>
+              <tr>
+                <td>调拨单状态</td>
+                <td><span class="pill amber">待审核</span><span class="pill amber">待发货</span></td>
+                <td>排除已结束或异常状态单据</td>
+              </tr>
+              <tr>
+                <td>仓库范围</td>
+                <td>调出仓处理中心=宝安处理中心；调出仓货位级别=精确</td>
+                <td>沿用 Wiki 现有预匹配适用范围</td>
+              </tr>
+              <tr>
+                <td>异常排除</td>
+                <td>未取消、未作废、未删除</td>
+                <td>避免异常单据污染当天总量</td>
+              </tr>
+              <tr>
+                <td>规则组命中</td>
+                <td>业务类型 + 国家 + 运输方式</td>
+                <td>只统计能命中某个货代占比规则组的调拨单</td>
+              </tr>
+              <tr>
+                <td>生成口径</td>
+                <td>收到硬件过机事件后生成；必须包含当前箱子关联单据</td>
+                <td>同日同规则组只生成一次，防止多机器事件重复生成配额池</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `
+    };
+
+    const modalMask = document.getElementById("modalMask");
+    const modalBody = document.getElementById("modalBody");
+    const toast = document.getElementById("toast");
+
+    function renderTab(tab) {
+      modalBody.innerHTML = tabContent[tab];
+      modalBody.querySelectorAll("[data-action='add-row']").forEach(btn => {
+        btn.addEventListener("click", () => showToast("Demo：这里表示新增一行配置"));
+      });
+    }
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(item => item.classList.remove("active"));
+        tab.classList.add("active");
+        renderTab(tab.dataset.tab);
+      });
+    });
+
+    document.getElementById("openRuleBtn").addEventListener("click", () => {
+      modalMask.style.display = "flex";
+    });
+
+    document.getElementById("closeBtn").addEventListener("click", () => {
+      modalMask.style.display = "none";
+    });
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      modalMask.style.display = "none";
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      showToast("已保存预匹配规则配置");
+    });
+
+    modalMask.addEventListener("click", event => {
+      if (event.target === modalMask) modalMask.style.display = "none";
+    });
+
+    const initialTab = new URLSearchParams(window.location.search).get("tab") || "limit";
+    const initialButton = document.querySelector(".tab[data-tab='" + initialTab + "']");
+    if (initialButton) {
+      document.querySelectorAll(".tab").forEach(item => item.classList.remove("active"));
+      initialButton.classList.add("active");
+      renderTab(initialTab);
+    } else {
+      renderTab("limit");
+    }
+  </script>
+</body>
+</html>
