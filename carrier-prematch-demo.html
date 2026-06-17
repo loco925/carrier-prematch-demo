@@ -641,19 +641,18 @@
       ratio: `
         <div class="scenario">
           <strong>兼容场景</strong>
-          <div>V1 采用“当天首次过机锁定配额池”。第一次收到过机事件时，系统按规则组圈定当天参与统计的调拨单并锁定总量；统计范围必须包含当前过机箱子关联的调拨单。后续多次过机仍使用第一次锁定的配额池，不扩大总量。</div>
+          <div>V1 采用“当天首次过机锁定配额池”。第一次收到过机事件时，系统按国家 + 运输方式圈定当天参与统计的调拨单并锁定总量；统计范围必须包含当前过机箱子关联的调拨单。后续自动预匹配和手动【预匹配操作】都复用当天配额池，不重新生成、不扩大总量。</div>
         </div>
         <div class="rule-head">
           <div>
             <div class="rule-title">货代占比规则</div>
-            <div class="rule-desc">一行就是一条货代最大占比限制。同一组“业务类型 + 国家 + 运输方式”下可只维护需要限制的货代，例如只限制 A 货代最多 50%，其他货代不配置则不受占比限制。</div>
+            <div class="rule-desc">一行就是一条货代最大占比限制。同一组“国家 + 运输方式”下可只维护需要限制的货代，例如只限制 A 货代最多 50%，其他货代不配置则不受占比限制。占比规则不维护业务类型。</div>
           </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>业务类型</th>
                 <th>国家</th>
                 <th>运输方式</th>
                 <th>货代</th>
@@ -664,19 +663,17 @@
             </thead>
             <tbody>
               <tr>
-                <td><select><option>FBA半精品</option><option>海外仓</option><option>不限</option></select></td>
                 <td><select><option>美国</option><option>日本</option><option>英国</option></select></td>
                 <td><select><option>空运</option><option>海运</option><option>铁路</option></select></td>
-                <td><select><option>华东航线</option><option>南方快航</option></select></td>
+                <td><select><option>新启天欧洲</option><option>华东航线</option><option>南方快航</option></select></td>
                 <td><input value="50%"></td>
-                <td><input value="新启天欧洲当天最多占用 50%，其余货代不限制"></td>
+                <td><input value="该货代当天最多占用 50%，其余货代不限制"></td>
                 <td><button class="btn danger">删除</button></td>
               </tr>
               <tr>
-                <td><select><option>FBA半精品</option><option>海外仓</option><option>不限</option></select></td>
                 <td><select><option>美国</option><option>日本</option><option>英国</option></select></td>
                 <td><select><option>空运</option><option>海运</option><option>铁路</option></select></td>
-                <td><select><option>南方快航</option><option>华东航线</option></select></td>
+                <td><select><option>南方快航</option><option>新启天欧洲</option><option>华东航线</option></select></td>
                 <td><input value="30%"></td>
                 <td><input value="可选配置；不需要限制则删除本行"></td>
                 <td><button class="btn icon" data-action="add-row" title="新增一行">+</button></td>
@@ -686,7 +683,51 @@
         </div>
         <div class="scenario" style="margin-top:12px;">
           <strong>匹配口径</strong>
-          <div>当前货代已占用重量 &lt; 最大可分配重量时，本单允许匹配该货代；即使匹配后略超也不拆单。若已占用重量 ≥ 最大可分配重量，后续单据跳过该货代，继续匹配次优渠道。未配置占比的货代不受该限制。</div>
+          <div>当前货代已占用重量 &lt; 最大可分配重量时，本单允许匹配该货代；即使匹配后略超也不拆单。若已占用重量 ≥ 最大可分配重量，后续单据跳过该货代，继续匹配次优渠道。未配置占比的货代不维护额度。</div>
+        </div>
+        <div class="rule-head" style="margin-top:12px;">
+          <div>
+            <div class="rule-title">手动预匹配与重匹配处理</div>
+            <div class="rule-desc">手动【预匹配操作】只做补救和重新查询，不生成配额池、不重算配额池。单据若在当天配额池明细内，则按调拨单维度做幂等占用；若不在明细内，则走普通预匹配，不扣占比。</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>处理方式</th>
+                <th>占用数据</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>原预匹配货代为空，匹配到 A</td>
+                <td>正常写入预匹配货代 A</td>
+                <td>A 配置占比时，A 已占用重量增加本单计费重量</td>
+              </tr>
+              <tr>
+                <td>原货代=A，重新匹配仍为 A</td>
+                <td>结果保持不变</td>
+                <td>不重复扣减，不重复累加</td>
+              </tr>
+              <tr>
+                <td>原货代=A，重新匹配为 B，且 B 可用</td>
+                <td>预匹配货代改为 B</td>
+                <td>A 释放本单重量，B 占用本单重量</td>
+              </tr>
+              <tr>
+                <td>原货代=A，新候选不可用</td>
+                <td>保留原 A，不清空结果</td>
+                <td>不释放旧占用，不新增占用</td>
+              </tr>
+              <tr>
+                <td>原货代=A，A 已超上限，重匹配仍为 A</td>
+                <td>允许保持 A</td>
+                <td>额度判断排除当前单据自己的占用</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="rule-head" style="margin-top:12px;">
           <div>
@@ -704,11 +745,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>业务类型</td>
-                <td><span class="pill blue">FBA半精品</span><span class="pill blue">海外仓</span></td>
-                <td>仅允许这两个业务类型；同时还要命中当前占比规则组</td>
-              </tr>
               <tr>
                 <td>装箱状态</td>
                 <td><span class="pill green">已装箱</span></td>
@@ -741,13 +777,13 @@
               </tr>
               <tr>
                 <td>规则组命中</td>
-                <td>业务类型 + 国家 + 运输方式</td>
+                <td>国家 + 运输方式</td>
                 <td>只统计能命中某个货代占比规则组的调拨单</td>
               </tr>
               <tr>
                 <td>生成口径</td>
                 <td>收到硬件过机事件后生成；必须包含当前箱子关联单据</td>
-                <td>同日同规则组只生成一次，防止多机器事件重复生成配额池</td>
+                <td>同日同规则组只生成一次；手动预匹配不生成、不重算配额池</td>
               </tr>
             </tbody>
           </table>
